@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="./css/base.css" />
+    <link rel="stylesheet" type="text/css" href="./css/container.css" />
+    <title>图片裁剪</title>
+  </head>
+  <body>
+    <input
+      id="uploadFileId"
+      type="file"
+      hidden
+      onchange="onChangeFile(event)"
+    />
+
+    <div id="app">
+      <div id="canvas-container">
+        <div class="canvas-mask"></div>
+
+        <div id="image-preview">
+          <img src="" id="bgImageId" alt="" />
+        </div>
+      </div>
+
+      <div id="preview-container">
+        <div id="block-mode"></div>
+        <div id="round-mode"></div>
+
+        <button
+          class="el-button"
+          id="uploadButtonId"
+          onclick="uploadFile(event)"
+        >
+          上传图片
+        </button>
+
+        <button class="el-button" onclick="getCroppedPicture(event)">
+          确定
+        </button>
+        <div id="result-image" style="margin-top:30px">
+          <img src="" alt="">
+          
+        </div>
+      </div>
+    </div>
+
+    <script src="./lib/corpper/cropper.min.js"></script>
+    <script src="./js/constant.js"></script>
+    <script src="./js/element-utills.js"></script>
+    <script src="./js/utils.js"></script>
+    <script src="./js/file.js"></script>
+  </body>
+</html>

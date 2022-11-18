@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <style>
+    canvas {
+        border: 1px solid red;
+    }
+  </style>
+  <body>
+    <div style="padding: 0px;">
+
+        <div id="canvas" style="height: 600px;box-sizing: border-box;"></div>
+    </div>
+
+    <div id="tools" />
+
+    <script type="module">
+      import { createArtboard } from "./js/index.js";
+
+      const { toBase64, clearCanvas, toBlob ,restore } = createArtboard(
+        document.querySelector("#canvas")
+      );
+
+      const clearBtn = document.createElement("button");
+      clearBtn.innerText = "清除画布";
+      clearBtn.onclick = clearCanvas;
+
+      const toBase64Btn = document.createElement("button");
+      toBase64Btn.innerText = "生成base64";
+      toBase64Btn.onclick = () => {
+        console.log(" toBase64()", toBase64());
+      };
+
+      const toBlobBtn = document.createElement("button");
+      toBlobBtn.innerText = "生成blob";
+      toBlobBtn.onclick = () => {
+        toBlob((blob) => {
+          console.log("blob url", window.URL.createObjectURL(blob));
+        });
+      };
+
+
+      const resetBtn = document.createElement("button");
+      resetBtn.innerText = "reset";
+      resetBtn.onclick = () => {
+
+        console.log('restore',restore());
+        // restore()
+        // toBlob((blob) => {
+        //   console.log("blob url", window.URL.createObjectURL(blob));
+        // });
+      };
+
+      document.querySelector("#tools").appendChild(clearBtn);
+      document.querySelector("#tools").appendChild(toBase64Btn);
+      document.querySelector("#tools").appendChild(toBlobBtn);
+      document.querySelector("#tools").appendChild(resetBtn);
+    </script>
+  </body>
+</html>
