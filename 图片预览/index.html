@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <style>
+    body {
+      height: 1000px;
+    }
+    .list-image {
+      /* width: 1080px; */
+      height: 700px;
+      /* text-align: center; */
+      cursor: pointer;
+    }
+
+    .list-image img {
+      /* width: 100%; */
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* 图片预览样式 */
+    .modal {
+      touch-action: none;
+      user-select: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0.75);
+    }
+    .modal > img {
+      position: absolute;
+      padding: 0;
+      margin: 0;
+      transform: translateZ(0);
+    }
+  </style>
+  <body>
+    <div id="app">
+      <div id="list" class="list">
+        <div class="list-image">
+          <img src="./images/p1.jpg" />
+        </div>
+        <div class="list-image">
+          <img src="./images/p1.jpg" />
+        </div>
+        <div class="list-image">
+          <img src="./images/p1.jpg" />
+        </div>
+        <div class="list-image">
+          <img src="./images/p1.jpg" />
+        </div>
+        <div class="list-image">
+          <img src="./images/p1.jpg" />
+        </div>
+        <div class="list-image">
+          <img src="./images/p1.jpg" />
+        </div>
+        <div class="list-image">
+          <img src="./images/p1.jpg" />
+        </div>
+        <div class="list-image">
+          <img src="./images/p1.jpg" />
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      import { init } from "./js/index.js";
+
+      init();
+    </script>
+  </body>
+</html>
