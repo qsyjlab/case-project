@@ -7,13 +7,22 @@
     >
       <div className="vui-virtual-container" :style="virtualContainerStyles">
         <ul className="vui-tree-group vui-tree-virtual" :style="groupStyles">
+          <!-- {{ checkedArrIds.has(item[keyMap.id]) }} -->
           <TreeNodeItem
             v-for="item in visibelList"
             :key="item[keyMap.id]"
             :data="item"
             :keyMap="keyMap"
+            :checkable="checkable"
+            :isChecked="
+              checkable
+                ? getCheckedStatus(item, checkedArrIds, treeRelationMap, keyMap)
+                : checkedArrIds.has(item[keyMap.id])
+            "
             :isExpanded="expandedArrIds.has(item[keyMap.id])"
             @expanded="handleItemExpanded"
+            @checked="handleItemChecked"
+            @click="clickTreeNodeHandler"
           />
         </ul>
       </div>
@@ -22,11 +31,13 @@
 </template>
 <script>
 import {
-  createTreeData,
   getNewState,
   traverseRemove,
   getExpandedArrIds,
   getVisibleRange,
+  getCheckedChildren,
+  getCheckedParents,
+  getCheckedStatus,
 } from "./utils";
 
 import TreeNodeItem from "./tree-node-item.vue";
@@ -41,7 +52,20 @@ export default {
       type: Object,
       default: () => ({ text: "title", children: "children", id: "key" }),
     },
+
     expandedIds: {
+      type: Array,
+      default: () => [],
+    },
+    multiple: {
+      type: Boolean,
+      default: true,
+    },
+    checkable: {
+      type: Boolean,
+      default: false,
+    },
+    checkedIds: {
       type: Array,
       default: () => [],
     },
@@ -62,6 +86,7 @@ export default {
       treeList: [],
       visibelList: [],
       expandedArrIds: new Set(),
+      checkedArrIds: new Set(),
       treeRelationMap: {},
       scrollTop: 0,
       scrollEl: null,
@@ -70,15 +95,44 @@ export default {
   watch: {
     expandedIds(newVal) {
       if (newVal !== this.expandedArrIds) {
-        // console.log('_newVal',_newVal);
         const newExpanedIds = getExpandedArrIds(newVal, this.treeRelationMap);
 
         this.expandedArrIds = newExpanedIds;
+
+        this.renderVisible();
+      }
+    },
+    checkedIds(newVal) {
+      if (newVal !== this.checkedArrIds) {
+        this.checkedArrIds = new Set(this.checkedIds);
       }
     },
   },
-  created() {},
+  created() {
+    this.init();
+  },
   methods: {
+    getCheckedStatus,
+    // 单点选择
+    clickTreeNodeHandler(record, checked) {
+      const id = record[this.keyMap.id];
+
+      if (!this.multiple) {
+        if (checked && !this.checkedArrIds.has(id)) {
+          this.checkedArrIds.clear();
+          this.checkedArrIds.add(id);
+          this.$forceUpdate();
+        }
+      } else {
+        if (checked && !this.checkedArrIds.has(id)) {
+          this.checkedArrIds.add(id);
+        } else if (!checked) {
+          this.checkedArrIds.delete(id);
+        }
+      }
+
+      this.$emit("checked", record, checked , this.checkedArrIds);
+    },
     handleTreeScroll(e) {
       this.scrollTop = e.target.scrollTop || 0;
 
@@ -88,15 +142,18 @@ export default {
       this.scrollEl = ref;
     },
     init() {
-      const { list, obj } = getNewState({
+      const { list, obj, expandedArrIds, checkedArrIds } = getNewState({
         data: this.treeData,
         keysMap: this.keyMap,
         expandedIds: this.expandedIds,
+        checkedIds: this.checkedIds,
       });
       this.treeList = list;
-
-      console.log("liwst", list);
       this.treeRelationMap = obj;
+
+      this.expandedArrIds = expandedArrIds;
+      this.checkedArrIds = checkedArrIds;
+
       this.renderVisible();
     },
     renderVisible() {
@@ -109,9 +166,6 @@ export default {
         keysMap: this.keyMap,
       });
       this.visibelList = items;
-
-      console.log('items',items);
-
       this.virtualContainerStyles = {
         height: `${height}px`,
       };
@@ -119,11 +173,56 @@ export default {
         transform: `translate(0, ${translateY}px)`,
       };
     },
+    handleItemChecked(record, isChecked) {
+      const { id: kId, children: childrenKey } = this.keyMap;
+      const { parentIds } = record;
+      const strId = String(record[kId]);
+
+      if (isChecked && !this.checkedArrIds.has(strId)) {
+        this.checkedArrIds.add(strId);
+        // 判断其父级&祖先节点是否需要被选中
+        getCheckedParents(strId, this.checkedArrIds, this.treeRelationMap);
+        // 选中其所有其子孙节点
+        getCheckedChildren(strId, this.checkedArrIds, this.treeRelationMap);
+      } else if (!isChecked) {
+        // console.log('delete');
+        this.checkedArrIds.delete(strId);
+        // 移除祖先节点的选中状态
+        parentIds.forEach((pId) => {
+          if (this.checkedArrIds.has(pId)) {
+            this.checkedArrIds.delete(pId);
+          }
+        });
+
+        traverseRemove(this.checkedArrIds, record);
+      }
+
+      this.checkedArrIds = this.checkedArrIds;
+
+      // this.renderVisible();
+
+      // console.timeEnd("time start");
+      this.$forceUpdate();
+      this.$emit("checked", record, isChecked, this.checkedArrIds);
+
+      // 递归移除当前节点及其子孙节点
+      function traverseRemove(checkedArrIds, item) {
+        const children = item?.[childrenKey];
+        if (children && children.length) {
+          children.forEach((pre) => {
+            // const i = checkedIdsMap[pre[kId]];
+            if (checkedArrIds.has(pre[kId])) {
+              // console.log("pre", pre[kId]);
+              checkedArrIds.delete(pre[kId]);
+            }
+            traverseRemove(checkedArrIds, pre);
+          });
+        }
+      }
+    },
 
     // 手动点击展开/收起 icon 的处理
     handleItemExpanded(record = {}, isExpanded, e) {
-      // console.log("isExpanded", isExpanded);
-
       const { childrenIds } = record;
 
       const { id: kId } = this.keyMap;
@@ -139,13 +238,12 @@ export default {
           traverseRemove(this.expandedArrIds, this.treeRelationMap, strId);
         }
 
+        this.expandedArrIds = this.expandedArrIds;
+
         this.renderVisible();
         this.$emit("expanded", record, isExpanded, this.expandedArrIds);
-
-        this.expandedArrIds = this.expandedArrIds;
       }
     },
   },
 };
 </script>
-<style scoped></style>

@@ -34,9 +34,11 @@
 }
 
 .vui-tree .vui-tree-item-title {
-    display: inline-block;
+    /* display: inline-block; */
+    display: flex;
+    align-items: center;
     height: 28px;
-    line-height: 28px;
+    /* line-height: 28px; */
     font-size: 12px;
     -webkit-font-smoothing: auto;
     white-space: pre;
@@ -49,6 +51,11 @@
 
 .vui-tree .vui-tree-item:hover {
     background-color: #e8f2ff;
+}
+
+.vui-tree .vui-tree-item.is-checked {
+    background-color: #e8f2ff;
+
 }
 
 
