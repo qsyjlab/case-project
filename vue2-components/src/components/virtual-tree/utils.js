@@ -11,7 +11,7 @@ export function createTreeData(path = "0", level = 3, count = 10) {
 
     if (level === 1 && key === "0-0-0-0") {
       // 构建100万个子节点
-      treeNode.children = createTreeData(key, level - 1, 30000);
+      treeNode.children = createTreeData(key, level - 1, 100000);
     } else if (level > 0) {
       treeNode.children = createTreeData(key, level - 1, 2);
     }
@@ -20,28 +20,6 @@ export function createTreeData(path = "0", level = 3, count = 10) {
   }
   return list;
 }
-
-// function treeData(path = '0', level = 3, count = 10) {
-//   const list = []
-//   for (let i = 0; i < count; i += 1) {
-//     const key = `${path}-${i}`
-//     const treeNode = {
-//       title: key,
-//       label: key,
-//       key
-//     }
-
-//     if (level === 1 && key === '0-0-0-0') {
-//       // 100万个子节点
-//       treeNode.children = treeData(key, level - 1, 1000000)
-//     } else if (level > 0) {
-//       treeNode.children = treeData(key, level - 1)
-//     }
-
-//     list.push(treeNode)
-//   }
-//   return list
-// }
 
 export function getNewState(paramater = {}) {
   const { data, keysMap, expandedIds, checkedIds } = paramater;
@@ -103,10 +81,13 @@ function resolveTreeDataToList(treeData, keysMap) {
       info.parentIds = parentIds;
       info.parentNames = parentNames;
 
-      list.push(info);
+      // list.push(info);
       obj[info[kId]] = info;
 
       if (info[children] && info[children].length) {
+        // obj[info[kId]].isLeaf = true;
+        info.isLeaf = true;
+
         const newParentIds = parentIds.slice();
         const newParentNames = parentNames.slice();
         const strId = String(info[kId]);
@@ -121,6 +102,8 @@ function resolveTreeDataToList(treeData, keysMap) {
           levs
         );
       }
+
+      info.isLeaf = false;
       return String(info[kId]);
     });
   }
@@ -204,9 +187,11 @@ export function getVisibleRange({
   itemHeight,
   expandedArrIds,
   keysMap,
+  filterKeysSet,
+  searchValue,
 }) {
   // idKey: id对应的键名；childrenKey: 子节点对应的键名
-  const { id: idKey, children: childrenKey } = keysMap;
+  const { id: idKey, text: textKey, children: childrenKey } = keysMap;
 
   let totalHeight = 0; // 树形结构内容的总高度；
   // 0: 顶部被隐藏阶段；1: 可视区域阶段；2: 可视区域以下阶段；
@@ -216,12 +201,14 @@ export function getVisibleRange({
   const items = [];
 
   // 递归解析树形结构的数据，计算整体高度并找出需要在可视区域内展示的内容
+
   loopData(treeData);
 
-  // console.log('data loop');
-
-  function loopData(list) {
-    list.forEach((item) => {
+  function loopData(list = []) {
+    const _list = searchValue
+      ? list.filter((item) => filterKeysSet.has(item[idKey]))
+      : list;
+    _list.forEach((item) => {
       const key = item[idKey];
       const children = item[childrenKey];
       totalHeight += itemHeight;
@@ -336,8 +323,4 @@ export function getCheckedStatus(record, checkedArrIds, obj, keysMap) {
   }
 }
 
-export function singleClickCheckedMode(record, checkedArrIds, keyMap) {
-  const { id } = keyMap;
-
-  
-}
+export function filterNode() {}

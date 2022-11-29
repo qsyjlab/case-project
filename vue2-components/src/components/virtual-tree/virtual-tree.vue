@@ -2,12 +2,15 @@
   <div class="vui-tree vui-tree-small">
     <div
       class="vui-group-container"
-      style="overflow-y: auto"
+      :style="{
+        overflowY: 'auto',
+        height: `${visibleHeight}px`,
+      }"
       @scroll="handleTreeScroll"
+      :ref="getConteinrRef"
     >
       <div className="vui-virtual-container" :style="virtualContainerStyles">
         <ul className="vui-tree-group vui-tree-virtual" :style="groupStyles">
-          <!-- {{ checkedArrIds.has(item[keyMap.id]) }} -->
           <TreeNodeItem
             v-for="item in visibelList"
             :key="item[keyMap.id]"
@@ -41,44 +44,19 @@ import {
 } from "./utils";
 
 import TreeNodeItem from "./tree-node-item.vue";
+import { virtualTreeProps } from "./virtual-tree";
 
 import "./tree.css";
 export default {
   components: {
     TreeNodeItem,
   },
-  props: {
-    keyMap: {
-      type: Object,
-      default: () => ({ text: "title", children: "children", id: "key" }),
-    },
-
-    expandedIds: {
-      type: Array,
-      default: () => [],
-    },
-    multiple: {
-      type: Boolean,
-      default: true,
-    },
-    checkable: {
-      type: Boolean,
-      default: false,
-    },
-    checkedIds: {
-      type: Array,
-      default: () => [],
-    },
-    treeData: {
-      type: Array,
-      default: () => [],
-    },
-  },
+  props: virtualTreeProps,
   data() {
     return {
       // treeData: [],
       virtualContainerStyles: {
-        height: "0px",
+        height: `${0}px`,
       },
       groupStyles: {
         transform: `translate(0, ${0}px)`,
@@ -87,11 +65,14 @@ export default {
       visibelList: [],
       expandedArrIds: new Set(),
       checkedArrIds: new Set(),
+      filterKeysSet: new Set(),
       treeRelationMap: {},
       scrollTop: 0,
       scrollEl: null,
+      searchValue: null,
     };
   },
+  computed: {},
   watch: {
     expandedIds(newVal) {
       if (newVal !== this.expandedArrIds) {
@@ -113,6 +94,59 @@ export default {
   },
   methods: {
     getCheckedStatus,
+    search(val) {
+      this.scrollTop = 0;
+
+      this.scrollEl.scrollTop = 0;
+      this.searchValue = val;
+
+      this.renderVisible();
+    },
+    filter(query) {
+      if (typeof this.filterMethod !== "function") return;
+
+      this.searchValue = query;
+      const { id: kid } = this.keyMap;
+      const expandKeysSet = new Set();
+      const hiddenVisibelKeys = new Set();
+      const filter = this.filterMethod;
+      const family = [];
+      hiddenVisibelKeys.clear();
+
+      function traverse(nodes = []) {
+        nodes.forEach((node) => {
+          const nodeKeyValue = node[kid];
+          family.push(node);
+          if (filter(query, node)) {
+            family.forEach((m) => {
+              expandKeysSet.add(m[kid]);
+            });
+          } else if (node.isLeaf) {
+            hiddenVisibelKeys.add(nodeKeyValue);
+          }
+
+          const children = node.children;
+
+          if (children) {
+            traverse(children);
+          }
+
+          family.pop();
+        });
+      }
+
+      traverse(this.treeData);
+
+      this.filterKeysSet = expandKeysSet;
+      this.scrollTop = 0;
+
+      this.scrollEl.scrollTop = 0;
+      this.renderVisible();
+
+      this.expandedArrIds = expandKeysSet
+
+      this.$emit("expanded", {}, true, this.expandedArrIds);
+    },
     // 单点选择
     clickTreeNodeHandler(record, checked) {
       const id = record[this.keyMap.id];
@@ -131,7 +165,7 @@ export default {
         }
       }
 
-      this.$emit("checked", record, checked , this.checkedArrIds);
+      this.$emit("checked", record, checked, this.checkedArrIds);
     },
     handleTreeScroll(e) {
       this.scrollTop = e.target.scrollTop || 0;
@@ -160,10 +194,12 @@ export default {
       const { items, translateY, height } = getVisibleRange({
         treeData: this.treeData,
         scrollTop: this.scrollTop,
-        visibleHeight: 500,
-        itemHeight: 28,
+        visibleHeight: this.visibleHeight,
+        itemHeight: this.nodeHeight,
         expandedArrIds: this.expandedArrIds,
         keysMap: this.keyMap,
+        searchValue: this.searchValue,
+        filterKeysSet: this.filterKeysSet,
       });
       this.visibelList = items;
       this.virtualContainerStyles = {

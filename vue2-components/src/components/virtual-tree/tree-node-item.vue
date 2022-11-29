@@ -1,9 +1,11 @@
 <template>
   <li
-    :class="['vui-tree-item', isChecked === true ? 'is-checked' : ''] "
+    :class="[
+      'vui-tree-item',
+      !checkable && isChecked === true ? 'is-checked' : '',
+    ]"
     :key="data[keyMap.id]"
     :style="{ paddingLeft: `${pLen * 24}px` }"
-
     @click="treeItemClickHandler"
   >
     <span :class="['vui-tree-item-title']">
@@ -38,6 +40,7 @@
 import Expand from "./icon/expand.vue";
 
 import VCheckbox from "../checkbox/checkbox.vue";
+import { treeNodeItemProps } from "./virtual-tree";
 
 import { Checkbox } from "element-ui";
 
@@ -48,29 +51,7 @@ export default {
     ElCheckbox: Checkbox,
     VCheckbox,
   },
-  props: {
-    keyMap: {
-      type: Object,
-      default: () => ({ text: "title", children: "children", id: "key" }),
-    },
-    checkable: {
-      type: Boolean,
-      default: false,
-    },
-    data: {
-      type: Object,
-      default: () => ({}),
-    },
-    isExpanded: {
-      type: Boolean,
-      default: false,
-    },
-    isChecked: {
-      type: [Boolean, String],
-      default: false,
-    },
-  },
-
+  props: treeNodeItemProps,
   data() {
     return {
       pLen: 0,
@@ -86,10 +67,9 @@ export default {
     checkChangeHandler(val) {
       this.$emit("checked", this.data, val);
     },
-    treeItemClickHandler(){
-
+    treeItemClickHandler() {
+      if (this.checkable) return;
       this.$emit("click", this.data, !this.isChecked);
-
     },
     handleExpandIconClick(e) {
       e.stopPropagation();

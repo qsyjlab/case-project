@@ -15,7 +15,7 @@
 
 
 .vui-tree .vui-group-container {
-    height: 500px;
+    /* height: 500px; */
     width: 100%;
     overflow-y: auto;
     overflow-anchor: none;
