@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bilibili 番剧卡片</title>
+  </head>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      height: 100%;
+    }
+    body {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #ecf0f1;
+    }
+    .progress-card {
+      width: 400px;
+      height: 188px;
+      /* padding: 10px; */
+      box-sizing: border-box;
+      background-color: transparent;
+      /* background-color:  linear-gradient(180deg,hsla(0,0%,100%,.4),hsla(0,0%,100%,.8) 50%); */
+      box-shadow: 0 0 40px hsla(0, 0%, 100%, 0.6),
+        0 16px 32px rgba(0, 0, 0, 0.16), 0 8px 16px rgba(0, 0, 0, 0.08);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .progress-card__body {
+      position: relative;
+      background-color: #44bd32;
+      width: calc(100% - 20px);
+      height: calc(100% - 20px);
+      border-radius: 20px;
+    }
+
+    .progress-card__bar {
+      position: absolute;
+      left: 0;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 0;
+      background-color: white;
+    }
+
+    .progress-card__bar.is--progress {
+      transition: width 3s linear;
+    }
+
+    .progress-card__bmask {
+      height: 20px;
+      background-color: white;
+      position: absolute;
+      left: 0;
+      bottom: 0;
+    }
+  </style>
+
+  <body>
+    <div class="progress-card">
+      <!-- 进度 -->
+      <div class="progress-card__bar"></div>
+      <!-- 内容 -->
+      <div class="progress-card__body"></div>
+    </div>
+  </body>
+  <script>
+    let startWidth = 0;
+    let progressTimer = null;
+    const progressCardBar = document.querySelectorAll(".progress-card__bar");
+
+    startProgress();
+
+    function startProgress() {
+      progressCardBar.forEach((item) => {
+        progressTimer = setInterval(() => {
+          startWidth += 10;
+          if (startWidth >= 100) {
+            stopProgress();
+          }
+          item.classList.add("is--progress");
+          item.style.width = startWidth + "%";
+        }, 200);
+      });
+    }
+    function stopProgress() {
+      clearInterval(progressTimer);
+      progressTimer = null;
+      setTimeout(() => {
+        startWidth = 0;
+        progressCardBar.forEach((item) => {
+          item.classList.remove("is-progress");
+          item.style.width = 0;
+        });
+        startProgress();
+      }, 3000);
+    }
+  </script>
+</html>
