@@ -8,7 +8,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "file-saver": "2.0.2",
     "jquery": "^3.7.0",
+    "jszip": "3.5.0",
+    "pdfjs-dist": "2.3.200",
     "vue": "^2.6.14"
   },
   "devDependencies": {
