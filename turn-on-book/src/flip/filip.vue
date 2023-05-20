@@ -3,37 +3,93 @@
  * @Autor: qsyj
  * @Date: 2023-05-19 22:10:00
  * @LastEditors: qsyj
- * @LastEditTime: 2023-05-19 22:31:48
+ * @LastEditTime: 2023-05-20 16:34:42
 -->
 <template>
   <div>
-    <div id="book">
-      <div class="odd" id="page1">1</div>
+    <div>
+      <input type="file" @change="fileChange" />
+    </div>
+
+    <div v-show="showBook" id="book" ref="bookRef">
+      <!-- <div class="odd" id="page1">1</div>
       <div class="even" id="page2">2</div>
       <div class="odd" id="page3">3</div>
-      <div class="even" id="page4">4</div>
+      <div class="even" id="page4">4</div> -->
     </div>
   </div>
 </template>
 <script>
 import "../lib/turn";
 import $ from "jquery";
+import {
+  readPdfArrayBuffer,
+  pdfArrayBufferToContent,
+  createCanvas,
+  renderPdfCanvas,
+} from "../utils/pdf";
 
 export default {
   data() {
-    return {};
+    return {
+      showBook: false,
+    };
   },
   methods: {
-    init() {
-      console.log('$("#flipbook")', $("#flipbook"));
+    fileChange(e) {
+      const files = e.target.files;
+
+      readPdfArrayBuffer(files[0], (arrayBuffer) => {
+        // console.log('arrayBuffer',arrayBuffer);
+        pdfArrayBufferToContent(arrayBuffer, (pdf) => {
+          const canvasMap = createCanvas(pdf);
+
+          this.$nextTick(() => {
+            let height = 0;
+            let width = 0;
+            Object.keys(canvasMap).forEach((key) => {
+              const item = canvasMap[key];
+
+              if (!width) width = item.canvas.width;
+
+              if (!height) height = item.canvas.height;
+
+              const div = document.createElement("div");
+
+              div.append(item.canvas);
+              div.classList.add("page");
+              this.$refs.bookRef.append(div);
+
+              renderPdfCanvas(pdf, key, item);
+            });
+
+            this.showBook = true;
+            this.$nextTick(() => {
+              // this.$refs.bookRef.style.width = `${width}px`;
+              // this.$refs.bookRef.style.height = `${height}px`;
+              setTimeout(() => {
+                this.init(Object.keys(canvasMap).length, 595, 841);
+              }, 200);
+            });
+          });
+        });
+      });
+    },
+    init(pages, width, height) {
+      // console.log('$("#flipbook")', $("#flipbook"));
+
+      console.log(" width, height", width, height);
       this.$nextTick(() => {
         $("#book").turn({
+          // height:700,
+          width,
+          height,
+
           acceleration: true, // 是否启动硬件加速 如果为触摸设备必须为true
-          pages: 4, // 页码总数
-          elevation: 50, // 这个忘记是什么了
-          height: 200, // 高度 单位 px
-          gradients: true, // 是否显示翻页阴影效果
-          display: 'single', //设置单页还是双页
+          pages: pages, // 页码总数
+          // elevation: 50, // 这个忘记是什么了
+          gradients: true, // 是否显示翻页1阴影效果
+          display: "single", //设置单页还是双页
           when: {
             // 翻页前触发
             turning: function (e, page, view) {},
@@ -45,8 +101,8 @@ export default {
     },
   },
   mounted() {
-    console.log("$", $);
-    this.init();
+    // console.log("$", $);
+    // this.init();
   },
 };
 </script>
@@ -59,62 +115,23 @@ export default {
 }
 
 .page {
-  width: 70%;
+  /* width: 70%; */
   height: 600px;
   background-color: white;
+  text-align: center;
 }
 #book {
-  width: 90vw;
+  /* width: 80%; */
+  /* width: 90vw; */
+  /* height: 70vh; */
   margin: 0 auto;
   box-shadow: 0 0 15px #4d4c4c;
 }
 
-#book .turn-page {
-  background-color: white;
+#book canvas {
+  width: 100%;
+  /* height:100%; */
 }
 
-#book .cover {
-  background: #333;
-}
 
-#book .cover h1 {
-  color: white;
-  text-align: center;
-  font-size: 50px;
-  line-height: 500px;
-  margin: 0px;
-}
-
-#book .loader {
-  /* background-image: url(loader.gif); */
-  width: 24px;
-  height: 24px;
-  display: block;
-  position: absolute;
-  top: 238px;
-  left: 188px;
-}
-
-#book .data {
-  text-align: center;
-  font-size: 40px;
-  color: #999;
-  line-height: 500px;
-}
-
-#book .odd {
-  background-image: -webkit-linear-gradient(left, #fff 95%, #ddd 100%);
-  background-image: -moz-linear-gradient(left, #fff 95%, #ddd 100%);
-  background-image: -o-linear-gradient(left, #fff 95%, #ddd 100%);
-  background-image: -ms-linear-gradient(left, #fff 95%, #ddd 100%);
-  box-shadow: 0 0 15px #4d4c4c;
-}
-
-#book .even {
-  background-image: -webkit-linear-gradient(right, #fff 95%, #ddd 100%);
-  background-image: -moz-linear-gradient(right, #fff 95%, #ddd 100%);
-  background-image: -o-linear-gradient(right, #fff 95%, #ddd 100%);
-  background-image: -ms-linear-gradient(right, #fff 95%, #ddd 100%);
-  box-shadow: 0 0 15px #4d4c4c;
-}
 </style>
