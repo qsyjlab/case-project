@@ -3,7 +3,7 @@
  * @Autor: qsyj
  * @Date: 2023-05-19 22:10:00
  * @LastEditors: qsyj
- * @LastEditTime: 2023-05-20 16:34:42
+ * @LastEditTime: 2023-05-21 14:48:46
 -->
 <template>
   <div>
@@ -12,11 +12,12 @@
     </div>
 
     <div v-show="showBook" id="book" ref="bookRef">
-      <!-- <div class="odd" id="page1">1</div>
-      <div class="even" id="page2">2</div>
-      <div class="odd" id="page3">3</div>
-      <div class="even" id="page4">4</div> -->
+      <div class="page" v-for="(item, index) in imagesMap" :key="index">
+        <img :src="item.src" alt="/" />
+      </div>
     </div>
+
+    <div class="canvasList" v-show="false" ref="canvsListRef"></div>
   </div>
 </template>
 <script>
@@ -33,6 +34,7 @@ export default {
   data() {
     return {
       showBook: false,
+      imagesMap: [],
     };
   },
   methods: {
@@ -44,41 +46,58 @@ export default {
         pdfArrayBufferToContent(arrayBuffer, (pdf) => {
           const canvasMap = createCanvas(pdf);
 
-          this.$nextTick(() => {
+          this.$nextTick(async () => {
             let height = 0;
             let width = 0;
-            Object.keys(canvasMap).forEach((key) => {
-              const item = canvasMap[key];
 
-              if (!width) width = item.canvas.width;
+            for (const key in canvasMap) {
+              if (Object.hasOwnProperty.call(canvasMap, key)) {
+                const item = canvasMap[key].context2d;
 
-              if (!height) height = item.canvas.height;
+                if (!width) width = item.canvas.width;
 
-              const div = document.createElement("div");
+                if (!height) height = item.canvas.height;
 
-              div.append(item.canvas);
-              div.classList.add("page");
-              this.$refs.bookRef.append(div);
+                const div = document.createElement("div");
+                div.append(item.canvas);
+                div.classList.add("page");
+                await renderPdfCanvas(pdf, key, item);
+                this.$refs.canvsListRef.append(div);
 
-              renderPdfCanvas(pdf, key, item);
-            });
+                const blob = await this.generateImage(canvasMap[key].instance);
+                this.imagesMap.push({
+                  name: "",
+                  num: key,
+                  src: window.URL.createObjectURL(blob),
+                });
+              }
+            }
 
-            this.showBook = true;
-            this.$nextTick(() => {
-              // this.$refs.bookRef.style.width = `${width}px`;
-              // this.$refs.bookRef.style.height = `${height}px`;
-              setTimeout(() => {
-                this.init(Object.keys(canvasMap).length, 595, 841);
-              }, 200);
-            });
+            setTimeout(() => {
+              this.showBook = true;
+              this.init(this.imagesMap.length, 595 * 3, 841 * 3);
+            }, 300);
           });
         });
+      });
+    },
+    generateImage(canvas) {
+      // console.log("canvas.toBlob", canvas.toBlob);
+
+      return new Promise((resolve) => {
+        canvas.toBlob(
+          (blob) => {
+            resolve(blob);
+          },
+          "image/png",
+          1.0
+        );
       });
     },
     init(pages, width, height) {
       // console.log('$("#flipbook")', $("#flipbook"));
 
-      console.log(" width, height", width, height);
+      // console.log(" width, height", width, height);
       this.$nextTick(() => {
         $("#book").turn({
           // height:700,
@@ -132,6 +151,4 @@ export default {
   width: 100%;
   /* height:100%; */
 }
-
-
 </style>

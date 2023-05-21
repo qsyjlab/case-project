@@ -28,7 +28,7 @@ export function pdfArrayBufferToContent(pdfArrayBuffer, handler) {
   });
 }
 
-export function createCanvas(pdfEl,target) {
+export function createCanvas(pdfEl, target) {
   const canvasMap = {};
   let filePage = pdfEl.numPages;
   for (let i = 1; i <= filePage; i++) {
@@ -36,30 +36,35 @@ export function createCanvas(pdfEl,target) {
     canvas.id = `${new Date().getTime()}-${i}`;
     let context = canvas.getContext("2d");
 
-    canvasMap[i] = context;
+    canvasMap[i] = {
+      context2d: context,
+      instance: canvas,
+    };
   }
 
   return canvasMap;
 }
 
-export function renderPdfCanvas(pdfFile, pageNumber, context) {
+export async function renderPdfCanvas(pdfFile, pageNumber, context) {
+  return new Promise((resolve) => {
+    pdfFile.getPage(Number(pageNumber)).then((page) => {
+      // 设置展示比例
+      let scale = 1;
+      // 获取pdf尺寸
+      let viewport = page.getViewport(scale);
+      let canvas = context.canvas;
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
 
-    
-  pdfFile.getPage(Number(pageNumber)).then((page) => {
-    // 设置展示比例
-    let scale = 1;
-    // 获取pdf尺寸
-    let viewport = page.getViewport(scale);
-    let canvas = context.canvas;
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
-
-    // console.log('viewport',viewport);
-    let model = {
-      canvasContext: context,
-      viewport: viewport,
-    };
-    // 渲染PDF
-    page.render(model);
+      // console.log('viewport',viewport);
+      let model = {
+        canvasContext: context,
+        viewport: viewport,
+      };
+      // 渲染PDF
+      page.render(model).promise.then(() => {
+        resolve(true);
+      });
+    });
   });
 }
