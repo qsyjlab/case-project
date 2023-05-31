@@ -7,17 +7,19 @@
 -->
 <template>
   <div>
-    <filip></filip>
+    <flip-page></flip-page>
+    <!-- <filip></filip> -->
     <!-- <PdfToImage /> -->
   </div>
 </template>
 <script>
 import filip from "./flip/filip.vue";
-import PdfToImage from "./pdf-to-image.vue";
+import FlipPage from "./flip-page/flip-page.vue";
+
 export default {
   components: {
+    FlipPage,
     filip,
-    PdfToImage
   },
   data() {
     return {};
