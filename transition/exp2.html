@@ -44,6 +44,7 @@
         }
 
         .container p {
+            overflow: hidden;
             text-align: center;
         }
     </style>
@@ -59,6 +60,16 @@
 
     <script>
         class Transition {
+
+//             enterFromClass: String,
+//   enterActiveClass: String,
+//   enterToClass: String,
+//   appearFromClass: String,
+//   appearActiveClass: String,
+//   appearToClass: String,
+//   leaveFromClass: String,
+//   leaveActiveClass: String,
+//   leaveToClass: String
             constructor(el, enterClass, leaveClass) {
                 this.el = el;
                 this.enterClass = enterClass;

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <style>
     .fade-enter {
@@ -19,8 +20,14 @@
       opacity: 0;
       transition: opacity 0.5s;
     }
+
+    .collapse-transitions-enter-active,
+    .collapse-transitions-leave-active {
+      transition: 0.2s max-height ease-in-out, 0.2s padding-top ease-in-out, 0.2s padding-bottom ease-in-out;
+    }
   </style>
 </head>
+
 <body>
   <div id="app">
     <button onclick="toggle()">Toggle</button>
@@ -140,24 +147,42 @@
       }
     }
 
-    var message = document.getElementById('message');
-    var transition = new Transition(message, 'fade-enter', 'fade-leave');
+    const container = document.getElementById('container');
+    const message = document.getElementById('message');
+    const transition = new Transition(container, 'collapse-transitions-enter', 'collapse-transitions-leave');
 
-    transition.beforeEnter((el) => {
-      console.log('Before enter hook', el);
+    transition.beforeEnter(el => {
+      el.style.display = 'block';
+      el.style.maxHeight = '0';
+      el.style.paddingTop = '0';
+      el.style.paddingBottom = '0';
+
+      const scrollHeight = el.scrollHeight;
+      el.style.maxHeight = `${scrollHeight}px`;
     });
 
-    transition.beforeLeave((el) => {
-      console.log('Before leave hook',el);
+    transition.beforeLeave(el => {
+      el.style.maxHeight = `${el.scrollHeight}px`;
+      el.style.paddingTop = '';
+      el.style.paddingBottom = '';
     });
 
     function toggle() {
       if (message.style.display === 'none') {
+        container.style.display = 'block';
+        message.style.display = message.style.display === 'none' ? 'block' : 'none';
         transition.enter();
       } else {
+        message.style.display = message.style.display === 'none' ? 'block' : 'none';
+        container.style.display = 'none';
         transition.leave();
       }
+
+     
+
+      // console.log('message.style.display',message.style.display);
     }
   </script>
 </body>
+
 </html>
