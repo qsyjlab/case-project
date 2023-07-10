@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        .collapse-transitions-enter-active,
+        .collapse-transitions-leave-active {
+            transition: 0.2s max-height ease-in-out, 0.2s padding-top ease-in-out, 0.2s padding-bottom ease-in-out;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <button onclick="toggle()">Toggle</button>
+        <div id="container" class="collapse-transitions" style="overflow: hidden">
+            <p id="message">Hello, JavaScript!</p>
+        </div>
+    </div>
+
+    <script>
+        class Transition {
+            constructor(el, enterClass, leaveClass) {
+                this.el = el;
+                this.enterClass = enterClass;
+                this.leaveClass = leaveClass;
+                this.enterActiveClass = `${this.enterClass}-active`;
+                this.leaveActiveClass = `${this.leaveClass}-active`;
+                this.animationEndEvent = this.getAnimationEndEvent();
+                this.transitionEndEvent = this.getTransitionEndEvent();
+                this.enterHooks = [];
+                this.leaveHooks = [];
+            }
+
+            enter() {
+                this.el.style.display = 'block';
+                this.el.classList.add(this.enterClass);
+
+                requestAnimationFrame(() => {
+                    this.el.classList.add(this.enterActiveClass);
+                });
+
+                this.el.addEventListener(this.animationEndEvent, this.enterComplete);
+                this.el.addEventListener(this.transitionEndEvent, this.enterComplete);
+
+                this.callHooks(this.enterHooks);
+            }
+
+            leave() {
+                this.el.classList.add(this.leaveClass);
+
+                requestAnimationFrame(() => {
+                    this.el.classList.add(this.leaveActiveClass);
+                });
+
+                this.el.addEventListener(this.animationEndEvent, this.leaveComplete);
+                this.el.addEventListener(this.transitionEndEvent, this.leaveComplete);
+
+                this.callHooks(this.leaveHooks);
+            }
+
+            enterComplete = () => {
+                this.el.classList.remove(this.enterClass);
+                this.el.classList.remove(this.enterActiveClass);
+
+                this.el.removeEventListener(this.animationEndEvent, this.enterComplete);
+                this.el.removeEventListener(this.transitionEndEvent, this.enterComplete);
+            }
+
+            leaveComplete = () => {
+                this.el.style.display = 'none';
+                this.el.classList.remove(this.leaveClass);
+                this.el.classList.remove(this.leaveActiveClass);
+
+                this.el.removeEventListener(this.animationEndEvent, this.leaveComplete);
+                this.el.removeEventListener(this.transitionEndEvent, this.leaveComplete);
+            }
+
+            beforeEnter(hook) {
+                this.enterHooks.push(hook);
+            }
+
+            beforeLeave(hook) {
+                this.leaveHooks.push(hook);
+            }
+
+            callHooks(hooks) {
+                hooks.forEach(hook => {
+                    if (typeof hook === 'function') {
+                        hook(this.el);
+                    }
+                });
+            }
+
+            getAnimationEndEvent() {
+                const element = document.createElement('fakeelement');
+                const animations = {
+                    animation: 'animationend',
+                    OAnimation: 'oAnimationEnd',
+                    MozAnimation: 'animationend',
+                    WebkitAnimation: 'webkitAnimationEnd'
+                };
+
+                for (let animation in animations) {
+                    if (element.style[animation] !== undefined) {
+                        return animations[animation];
+                    }
+                }
+
+                return null;
+            }
+
+            getTransitionEndEvent() {
+                const element = document.createElement('fakeelement');
+                const transitions = {
+                    transition: 'transitionend',
+                    OTransition: 'oTransitionEnd',
+                    MozTransition: 'transitionend',
+                    WebkitTransition: 'webkitTransitionEnd'
+                };
+
+                for (let transition in transitions) {
+                    if (element.style[transition] !== undefined) {
+                        return transitions[transition];
+                    }
+                }
+
+                return null;
+            }
+        }
+
+        const container = document.getElementById('container');
+        const message = document.getElementById('message');
+        const transition = new Transition(container, 'collapse-transitions-enter', 'collapse-transitions-leave');
+
+        transition.beforeEnter(el => {
+            if (!el.dataset) el.dataset = {}
+
+            el.dataset.oldPaddingTop = el.style.paddingTop
+            el.dataset.oldPaddingBottom = el.style.paddingBottom
+
+            el.style.maxHeight = 0
+            el.style.paddingTop = 0
+            el.style.paddingBottom = 0
+        });
+
+        transition.beforeLeave(el => {
+            if (!el.dataset) el.dataset = {}
+            el.dataset.oldPaddingTop = el.style.paddingTop
+            el.dataset.oldPaddingBottom = el.style.paddingBottom
+            el.dataset.oldOverflow = el.style.overflow
+
+            el.style.maxHeight = `${el.scrollHeight}px`
+            el.style.overflow = 'hidden'
+        });
+
+        function toggle() {
+            if (container.style.display === 'none') {
+                container.style.display = 'block';
+                transition.enter();
+            } else {
+                transition.leave();
+            }
+
+            // message.style.display = message.style.display === 'none' ? 'block' : 'none';
+        }
+    </script>
+</body>
+
+</html>

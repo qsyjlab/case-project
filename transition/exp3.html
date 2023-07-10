@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    .fade-enter {
+      opacity: 0;
+    }
+
+    .fade-enter.fade-enter-active {
+      opacity: 1;
+      transition: opacity 0.5s;
+    }
+
+    .fade-leave {
+      opacity: 1;
+    }
+
+    .fade-leave.fade-leave-active {
+      opacity: 0;
+      transition: opacity 0.5s;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <button onclick="toggle()">Toggle</button>
+    <div id="container">
+      <p id="message" style="display: none;">Hello, JavaScript!</p>
+    </div>
+  </div>
+
+  <script>
+    class Transition {
+      constructor(el, enterClass, leaveClass) {
+        this.el = el;
+        this.enterClass = enterClass;
+        this.leaveClass = leaveClass;
+        this.enterActiveClass = `${this.enterClass}-active`;
+        this.leaveActiveClass = `${this.leaveClass}-active`;
+        this.animationEndEvent = this.getAnimationEndEvent();
+        this.transitionEndEvent = this.getTransitionEndEvent();
+        this.enterHooks = [];
+        this.leaveHooks = [];
+      }
+
+      enter() {
+        this.el.style.display = 'block';
+        this.el.classList.add(this.enterClass);
+
+        requestAnimationFrame(() => {
+          this.el.classList.add(this.enterActiveClass);
+        });
+
+        this.el.addEventListener(this.animationEndEvent, this.enterComplete);
+        this.el.addEventListener(this.transitionEndEvent, this.enterComplete);
+
+        this.callHooks(this.enterHooks);
+      }
+
+      leave() {
+        this.el.classList.add(this.leaveClass);
+
+        requestAnimationFrame(() => {
+          this.el.classList.add(this.leaveActiveClass);
+        });
+
+        this.el.addEventListener(this.animationEndEvent, this.leaveComplete);
+        this.el.addEventListener(this.transitionEndEvent, this.leaveComplete);
+
+        this.callHooks(this.leaveHooks);
+      }
+
+      enterComplete = () => {
+        this.el.classList.remove(this.enterClass);
+        this.el.classList.remove(this.enterActiveClass);
+
+        this.el.removeEventListener(this.animationEndEvent, this.enterComplete);
+        this.el.removeEventListener(this.transitionEndEvent, this.enterComplete);
+      }
+
+      leaveComplete = () => {
+        this.el.style.display = 'none';
+        this.el.classList.remove(this.leaveClass);
+        this.el.classList.remove(this.leaveActiveClass);
+
+        this.el.removeEventListener(this.animationEndEvent, this.leaveComplete);
+        this.el.removeEventListener(this.transitionEndEvent, this.leaveComplete);
+      }
+
+      beforeEnter(hook) {
+        this.enterHooks.push(hook);
+      }
+
+      beforeLeave(hook) {
+        this.leaveHooks.push(hook);
+      }
+
+      callHooks(hooks) {
+        hooks.forEach(hook => {
+          if (typeof hook === 'function') {
+            hook(this.el);
+          }
+        });
+      }
+
+      getAnimationEndEvent() {
+        const element = document.createElement('fakeelement');
+        const animations = {
+          animation: 'animationend',
+          OAnimation: 'oAnimationEnd',
+          MozAnimation: 'animationend',
+          WebkitAnimation: 'webkitAnimationEnd'
+        };
+
+        for (let animation in animations) {
+          if (element.style[animation] !== undefined) {
+            return animations[animation];
+          }
+        }
+
+        return null;
+      }
+
+      getTransitionEndEvent() {
+        const element = document.createElement('fakeelement');
+        const transitions = {
+          transition: 'transitionend',
+          OTransition: 'oTransitionEnd',
+          MozTransition: 'transitionend',
+          WebkitTransition: 'webkitTransitionEnd'
+        };
+
+        for (let transition in transitions) {
+          if (element.style[transition] !== undefined) {
+            return transitions[transition];
+          }
+        }
+
+        return null;
+      }
+    }
+
+    var message = document.getElementById('message');
+    var transition = new Transition(message, 'fade-enter', 'fade-leave');
+
+    transition.beforeEnter((el) => {
+      console.log('Before enter hook', el);
+    });
+
+    transition.beforeLeave((el) => {
+      console.log('Before leave hook',el);
+    });
+
+    function toggle() {
+      if (message.style.display === 'none') {
+        transition.enter();
+      } else {
+        transition.leave();
+      }
+    }
+  </script>
+</body>
+</html>

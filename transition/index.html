@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        /* .fade-enter {
+            opacity: 0;
+        }
+
+        .fade-enter-active {
+            opacity: 1;
+            transition: opacity 0.5s;
+        }
+
+        .fade-leave {
+            opacity: 1;
+        }
+
+        .fade-leave-active {
+            opacity: 0;
+            transition: opacity 0.5s;
+        } */
+
+
+        .bounce-enter-active {
+            animation: bounce-in 0.5s;
+        }
+
+        .bounce-leave-active {
+            animation: bounce-in 0.5s reverse;
+        }
+
+        @keyframes bounce-in {
+            0% {
+                transform: scale(0);
+            }
+
+            50% {
+                transform: scale(1.25);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <button onclick="toggle()">Toggle</button>
+        <p id="message" style="display: none;">Hello, JavaScript!</p>
+    </div>
+
+    <script>
+        class Transition {
+            constructor(el, enterClass, leaveClass) {
+                this.el = el;
+                this.enterClass = enterClass;
+                this.leaveClass = leaveClass;
+            }
+
+            enter() {
+                this.el.style.display = 'block';
+                this.el.classList.add(this.enterClass);
+
+                requestAnimationFrame(() => {
+                    this.el.classList.add(`${this.enterClass}-active`);
+                    this.el.classList.remove(this.enterClass);
+                });
+
+                this.cleanup();
+            }
+
+            leave() {
+                this.el.classList.add(this.leaveClass);
+
+                requestAnimationFrame(() => {
+                    this.el.classList.add(`${this.leaveClass}-active`);
+                    this.el.classList.remove(this.leaveClass);
+                    this.el.style.display = 'none';
+                });
+
+                this.cleanup();
+            }
+
+            cleanup() {
+                setTimeout(() => {
+                    this.el.classList.remove(`${this.enterClass}-active`);
+                    this.el.classList.remove(`${this.leaveClass}-active`);
+                }, 500);
+            }
+        }
+
+        var message = document.getElementById('message');
+        var transition = new Transition(message, 'bounce-enter', 'bounce-leave');
+
+        function toggle() {
+            if (message.style.display === 'none') {
+                transition.enter();
+            } else {
+                transition.leave();
+            }
+        }
+    </script>
+</body>
+
+</html>
